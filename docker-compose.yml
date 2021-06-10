@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  sshd_big:
+    restart: unless-stopped
+    image: "sshd:big"
+    build: 
+      context: ./
+      dockerfile: ./Dockerfile.big
+    ports:
+    - "2022:22"
+  sshd_small:
+    restart: unless-stopped
+    image: "sshd:small"
+    build: 
+        context: ./
+        dockerfile: ./Dockerfile.big
+    ports:
+    - "2122:22"

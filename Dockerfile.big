@@ -1,0 +1,11 @@
+FROM ubuntu:20.10 as build
+
+EXPOSE 22
+
+ENTRYPOINT [ "/usr/sbin/sshd", "-D", "-d", "-e" ]
+
+RUN apt-get update \
+  && apt-get install -y openssh-server \
+  && mkdir -p /run/sshd \
+  && echo 'root:password' | chpasswd \
+  && echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config

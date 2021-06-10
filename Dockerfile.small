@@ -1,0 +1,24 @@
+FROM ubuntu:20.10 as build
+
+RUN apt-get update \
+    && apt-get install -y curl automake gcc make zlib1g-dev libssl-dev
+
+RUN mkdir -p /srv/sshd && mkdir -p /srv/build  && cd /srv/build \
+  && curl -X GET -sSLk https://github.com/openssh/openssh-portable/archive/refs/tags/V_8_6_P1.tar.gz -o - \
+  | tar -C /srv/build -zx --strip-components=1 \
+  && autoreconf -fim \
+  && ./configure --prefix=/srv/sshd --sbindir=/srv/sshd/bin --libexecdir=/srv/sshd/bin \
+  && make -j 4 all \
+  && make install \
+  && echo 'PermitRootLogin yes' >> /srv/sshd/etc/sshd_config
+
+FROM ubuntu:20.10 as target
+
+EXPOSE 22
+
+RUN useradd -c "Privilege-separated SSH" -m -d /var/empty/sshd -s /sbin/nologin sshd \
+  && echo 'root:password' | chpasswd
+
+ENTRYPOINT [ "/srv/sshd/bin/sshd", "-D", "-d", "-e" ]
+
+COPY --from=build /srv/sshd /srv/sshd
